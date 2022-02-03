@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Timeline Service</title>
+    <title>게시글 양식</title>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@500&display=swap" rel="stylesheet">
@@ -14,10 +14,6 @@
 
         body {
             margin: 0px;
-        }
-
-        .area-edit {
-            display: none;
         }
 
         .wrap {
@@ -168,11 +164,6 @@
             font-family: 'Spoqa Han Sans';
         }
 
-        .footer {
-            position: relative;
-            height: 40px;
-        }
-
         .footer img.icon-start-edit {
             cursor: pointer;
             position: absolute;
@@ -201,56 +192,38 @@
             height: 18px;
         }
 
-        #cards-box {
-            margin-top: 12px;
+        .area-write {
+            margin: 0px 0px 0px 170px;
         }
+
     </style>
     <script>
-        // 미리 작성된 영역 - 수정하지 않으셔도 됩니다.
-        // 사용자가 내용을 올바르게 입력하였는지 확인합니다.
+
+        $(document).ready(function () {
+            // HTML 문서를 로드할 때마다 실행합니다.
+
+        })
+
         function isValidContents(contents) {
-            if (contents == '') {
+            if (contents === '') {
                 alert('내용을 입력해주세요');
-                return false;
-            }
-            if (contents.trim().length > 140) {
-                alert('공백 포함 140자 이하로 입력해주세요');
                 return false;
             }
             return true;
         }
 
-        // 익명의 username을 만듭니다.
-        function genRandomName(length) {
-            let result = '';
-            let characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-            let charactersLength = characters.length;
-            for (let i = 0; i < length; i++) {
-                let number = Math.random() * charactersLength;
-                let index = Math.floor(number);
-                result += characters.charAt(index);
-            }
-            return result;
-        }
-
-        $(document).ready(function () {
-            // HTML 문서를 로드할 때마다 실행합니다.
-            getMessages();
-        })
         // 메모를 생성합니다.
         function writePost() {
             // 1. 작성한 메모를 불러옵니다.
             let contents = $('#contents').val();
-
+            let title = $('#title').val();
+            let username = $('#username').val();
             // 2. 작성한 메모가 올바른지 isValidContents 함수를 통해 확인합니다.
-            if (isValidContents(contents) == false) {
+            if (isValidContents(contents) === false) {
                 return;
             }
-            // 3. genRandomName 함수를 통해 익명의 username을 만듭니다.
-            let username = genRandomName(10);
-
             // 4. 전달할 data JSON으로 만듭니다.
-            let data = {'username': username, 'contents': contents};
+            let data = {'username': username, "title": title, 'contents': contents};
 
             // 5. POST /api/memos 에 data를 전달합니다.
             $.ajax({
@@ -258,9 +231,9 @@
                 url: "/api/memos",
                 contentType: "application/json",
                 data: JSON.stringify(data),
-                success: function (response) {
+                success: function () {
                     alert('메시지가 성공적으로 작성되었습니다.');
-                    window.location.replace("index.html");
+                   window.location.replace('/');
                 }
             });
         }
@@ -268,23 +241,20 @@
 </head>
 
 <body>
-<div class="background-header">
-
-</div>
-<div class="background-body">
-
-</div>
+<div class="background-header"></div>
+<div class="background-body"></div>
 <div class="wrap">
     <div class="header">
         <h2>게시글 작성</h2>
     </div>
-    <div class="area-write">
-        <textarea class="field" placeholder="공유하고 싶은 소식을 입력해주세요" name="contents" id="contents" cols="30"
-                  rows="10"></textarea>
-        <!--            <button class="btn btn-danger" onclick="writePost()">작성하기</button>-->
-        <img class="icon-send" src="send.png" alt="" onclick="writePost();">
+</div>
+<div class="area-write">
+    <div>
+        <input type="title" class="from-control" id="title" placeholder="제 목">
     </div>
+        <textarea class="field" placeholder="공유하고 싶은 소식을 입력해주세요" name="contents" id="contents" cols="30" rows="10"></textarea>
+    <!--            <button class="btn btn-danger" onclick="writePost()">작성하기</button>-->
+    <img src="images/send.png" alt onclick="writePost()">
 </div>
 </body>
-
 </html>

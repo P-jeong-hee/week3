@@ -19,7 +19,9 @@ public class MemoController {
   private final MemoService memoService;
 
   @PostMapping("/api/memos")
-  public Memo createMemo(@RequestBody MemoRequestDto requestDto) {
+  public Memo createMemo(@RequestBody MemoRequestDto  requestDto) {
+    System.out.println(requestDto.getUsername());
+    requestDto.setUsername("/user/login");
     Memo memo = new Memo(requestDto);
     return memoRepository.save(memo);
   }

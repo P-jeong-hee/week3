@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>상세페이지</title>
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css"
+          integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">
+
+    <!-- Optional JavaScript -->
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+            integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+            crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+            integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+            crossorigin="anonymous"></script>
+</head>
+
+<script>
+
+    $(document).ready(function () {
+        getMessages();
+        getReplies();
+    })
+
+    // 게시글을 불러옵니다.
+    function getMessages() {
+        $('#cards-box').empty();
+        $('#reply-box').empty();
+        let idx = location.href.split("id=")[1];
+        $.ajax({
+            type: "GET",
+            url: `/api/contents/${idx}`,
+            data: {},
+            success: function (response) {
+                console.log(response);
+                let post = response;
+                let id = post.id;
+                let name = post.name;
+                let title = post.title;
+                let contents = post.contents;
+                let modifiedAt = post.modifiedAt;
+                addHTML(id, name, title, contents, modifiedAt);
+            }
+        });
+    }
+
+    // 불러온 게시글을 html에 붙여줍니다.
+    function addHTML(id, name, title, contents, modifiedAt) {
+        let tempHtml = makeMessage(id, name, title, contents, modifiedAt);
+        $('#cards-box').append(tempHtml);
+    }
+
+    // 게시글 형태를 만들어줍니다.
+    function makeMessage(id, name, title, contents, modifiedAt) {
+        let loginUsername = null;
+        let hide = ""
+        if (loginUsername !== name) {
+            hide = "hide"
+        }
+        return `<div class="card">
+                        <div class="metadata">
+                           <div id="${id}-name" class="name">
+                               ${name}
+                           </div>
+                           <div class="date">
+                               ${modifiedAt}
+                           </div>
+                        </div>
+                    <h2 class='title' id="${id}-title">"${title}"</h2>
+                        <div class="contents" id="${id}-contents" >
+                           ${contents}
+                        </div>
+                        <div class="footer ${hide}">
+                            <img id="${id}-delete" class="icon-delete" src="images/delete.png" alt="" onclick="deleteOne('${id}')">
+                        </div>
+                    </div>`;
+    }
+
+    // 게시글의 id 값을 받아 해당 댓글을 삭제합니다.
+    function deleteOne(id) {
+        if (confirm("정말 삭제하시겠습니까??") === false) {
+            return}
+        $.ajax({
+            type: "DELETE",
+            url: `/api/contents/${id}`,
+            success: function (response) {
+                alert('메시지 삭제에 성공하였습니다.');
+                window.location.replace("/");
+            }
+        })
+    }
+
+    <!------- 댓글  -------->
+    // 댓글을 불러옵니다.
+    function getReplies() {
+        let postId = location.href.split("id=")[1]; //[앞부분] [2] localhos/modify.html?id=12&address=seoul&
+        $.ajax({
+            type: "GET",
+            url: `/api/reply/${postId}`,
+            data: {},
+            success: function (response) {
+                for (let i = 0; i < response.length; i++) {
+                    let post = response[i];
+                    let id = post.id;
+                    let username = post.username;
+                    let reply = post.reply;
+                    let modifiedAt = post.modifiedAt;
+                    addReplyHTML(id, username, reply, modifiedAt);
+                }
+            }
+        });
+    }
+
+    // 불로온 댓글을 html에 붙여줍니다.
+    function addReplyHTML(id, username, reply, modifiedAt) {
+        let tempHtml = makeReply(id, username, reply, modifiedAt);
+        $('#reply-box').append(tempHtml);
+    }
+
+    // 댓글의 형태를 만들어 줍니다.
+    function makeReply(id, username, reply, modifiedAt) {
+        let loginUsername = null;
+        console.log(loginUsername)
+        let hide = "hide"
+        if (loginUsername === username) {
+            hide = ""
+        }
+        return `<div class="card">
+                        <div class="metadata">
+                           <div id="${id}-name" class="name">
+                               ${username}
+                           </div>
+                           <div class="date">
+                               ${modifiedAt}
+                           </div>
+                        </div>
+                        <div class="contents" id="${id}-reply" >
+                           ${reply}
+                        </div>
+                        <div id="${id}-editarea" class="edit">
+                            <textarea id="${id}-textarea" class="te-edit" name="" id="" cols="30" rows="5"></textarea>
+                        </div>
+                            <div class="footer ${hide}">
+                                <img id="${id}-edit" class="icon-start-edit" src="images/edit.png" alt="" onClick="editPost('${id}')">
+                                <img id="${id}-delete" class="icon-delete" src="images/delete.png" alt="" onClick="deleteReply('${id}')">
+                                <img id="${id}-submit" class="icon-end-edit" src="images/done.png" alt="" onClick="submitEdit('${id}')">
+                            </div>
+                    </div>`;
+    }
+
+    // 수정 버튼을 눌렀을 때, 기존 작성 내용을 수정박스(textarea)에 전달합니다.
+    function editPost(id) {
+        showEdits(id);
+        let contents = $(`#${id}-reply`).text().trim();
+        $(`#${id}-textarea`).val(contents);
+    }
+
+    // 숨길 버튼을 숨기고, 나타낼 버튼을 나타냅니다.
+    function showEdits(id) {
+        $(`#${id}-editarea`).show();
+        $(`#${id}-submit`).show();
+        $(`#${id}-delete`).show();
+
+        $(`#${id}-reply`).hide();
+        $(`#${id}-edit`).hide();
+    }
+
+    // 수정된 댓글을 put 요청 보내 update 합니다.
+    function submitEdit(id) {
+        // 1. 작성 대상 메모 contents 를 확인합니다
+        let reply = $(`#${id}-textarea`).val().trim();
+        // 2. 작성한 메모가 올바른지 isValidContents 함수를 통해 확인합니다.
+        if (isValidContents(reply) == false) {
+            return;
+        }
+        // 3. 전달할 data JSON으로 만듭니다.
+        let data = {"reply": reply};
+        // 4. PUT /api/memos/{id} 에 data를 전달합니다.
+        $.ajax({
+            type: "PUT",
+            url: `/api/reply/${id}`,
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (response) {
+                alert('메시지 변경에 성공하였습니다.');
+                window.location.reload();
+            }
+        });
+    }
+
+    // 글이 정상인지 확인
+    function isValidContents(contents) {
+        if (contents == '') {
+            alert('댓글 내용을 입력해주세요');
+            return false;
+        }
+        return true;
+    }
+
+    // 댓글을 작성하고 post 요청을 보내 저장합니다.
+    function writeReply() {
+        let postid = location.href.split("id=")[1]; //[앞부분] [2] localhos/modify.html?id=12&address=seoul&
+        var username = null;
+        let reply = $('#reply').val();
+        if (isValidContents(reply) == false) {
+            return;
+        }
+
+        let data = {'postid': postid, 'username': username, 'reply': reply};
+        $.ajax({
+            type: "POST",
+            url: "/api/reply",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+            success: function (response) {
+                if (response === true) {
+                    alert('메시지가 성공적으로 작성되었습니다.');
+                    window.location.reload();
+                } else {
+                    alert('로그인을 해주세요>_<');
+                    window.location.replace("/user/login");
+                }
+            },
+            error: function (xhr, ajaxOptions, thrownError) {
+                alert('로그인을 해주세요>_<');
+                window.location.replace("/user/login");
+            }
+        });
+    }
+
+    // 댓글의 id 값을 받아 해당 댓글을 삭제합니다.
+    function deleteReply(id) {
+        if (confirm("정말 삭제하시겠습니까??") == false) {
+            return
+        }
+        $.ajax({
+            type: "DELETE",
+            url: `/api/reply/${id}`,
+            success: function (response) {
+                alert('댓글 삭제에 성공하였습니다.');
+                window.location.reload();
+            }
+        })
+    }
+
+
+</script>
+
+<style>
+
+</style>
+<body>
+<div class="background-header"></div>
+<div class="background-body"></div>
+<!--/*@thymesVar id="username" type=""*/-->
+<span th:text="${username}"></span>의 상세페이지
+<button onclick="location.href='/'">홈으로</button>
+<!--        글영역     -->
+<div class="post">
+    <!--        게시글영역       -->
+    <div id="post-area">
+    </div>
+    <div id="button-area">
+        <button onclick="deletePost()">글 삭제하기</button>
+    </div>
+    <!--        댓글작성영역      -->
+    <div>
+        <p>댓글작성하기</p>
+        <textarea id="input-comment" rows="2"></textarea>
+        <button onclick="saveComment()">댓글 작성하기</button>
+    </div>
+    <!--        댓글영역        -->
+    <div id="comment-area">
+    </div>
+</div>
+
+
+</body>
+</html>
